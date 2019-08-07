@@ -1,2 +1,2 @@
 # 3d-shape
-Rotating 3d shapes using only Javascript
+Rotating 3d objects using only Javascript
