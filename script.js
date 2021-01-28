@@ -6,7 +6,7 @@ let previousX, previousY;
 let frameCounter = 0;
 let objAngle = [-0.98, -0.001];
 let canvasCenter = [c.width/2, c.height/2];
-let matrixSize = [ 7, 7];
+let matrixSize = [ 5, 5];
 
 initialize();
 function initialize() {
