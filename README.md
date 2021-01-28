@@ -1,6 +1,6 @@
-# Rotating and animating 3d-cuboids
+# Rotating and animating 3D cuboids
 
-Rotating 3d cuboids in vanilla Javascript.
+Rotating 3D cuboids in vanilla Javascript.
 
 Click <a href="https://joaovdev.github.io/3DvanillaJSshapes/">here</a> to view it.
 
