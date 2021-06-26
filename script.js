@@ -1,12 +1,13 @@
-let c = document.getElementById("myCanvas");
-let ctx = c.getContext("2d");
+let canvas = document.getElementById("myCanvas");
+let ctx = canvas.getContext("2d");
 let isMouseDown = false;
 let x = 0, y = 0, cx = 0, cy = 0;
 let previousX, previousY;
 let frameCounter = 0;
 let objAngle = [-0.98, -0.001];
-let canvasCenter = [c.width/2, c.height/2];
-let matrixSize = [ 5, 5];
+let canvasCenter = [canvas.width/2, canvas.height/2];
+let matrixSize = [ 13, 13];
+let firstMouseDrag = false;
 
 initialize();
 function initialize() {
@@ -20,9 +21,9 @@ function initialize() {
  // Resets the canvas dimensions to match window,
  // then draws the new borders accordingly.
 function resizeCanvas() {
-    c.width = window.innerWidth;
-    c.height = window.innerHeight;
-    canvasCenter = [c.width/2, c.height/2];
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvasCenter = [canvas.width/2, canvas.height/2];
 }
 
 
@@ -51,7 +52,7 @@ let createCuboid = function (x, y, z, w, h, d, matrixPos) {
         [2, 6],
         [3, 7]
     ];
-    return { nodes: nodes, edges: edges, matrixPos: matrixPos };
+    return { nodes: nodes, edges: edges, matrixPos };
 };
 
 let shapes = []
@@ -102,23 +103,40 @@ let rotateY3D = function (theta) {
     }
 };
 
-c.onmousedown = function () {
-    isMouseDown = true;
+let rotateZ3D = function(theta) {
+    let sinTheta = Math.sin(theta / 50);
+    let cosTheta = Math.cos(theta / 50);
+
+    for (let q = 0; q < shapes.length; q++) {
+        for (let n = 0; n < shapes[q].nodes.length; n++) {
+            let node = shapes[q].nodes[n];
+            let x = node[0];
+            let y = node[1];
+            node[0] = x * cosTheta - y * sinTheta;
+            node[1] = y * cosTheta + x * sinTheta;
+        }
+    }
 };
 
-c.onmouseup = function () {
+
+canvas.onmousedown = function () {
+    isMouseDown = true;
+    firstMouseDrag = true;
+};
+
+canvas.onmouseup = function () {
     isMouseDown = false;
 };
 
-c.onmousemove = function (event) {
+canvas.onmousemove = function (event) {
     if (isMouseDown) {
         previousX = x;
         previousY = y;
         x = event.clientX;
         y = event.clientY;
-        console.log('x=' + x + ' y=' + y);
+        //console.log('x=' + x + ' y=' + y);
         rotateY3D(x - previousX);
-        rotateX3D(y - previousY);
+        rotateX3D(-(y - previousY));
     }
     else {
         x = event.clientX;
@@ -126,10 +144,9 @@ c.onmousemove = function (event) {
     }
 };
 
-let eraseObjects = function(eraseWidth, eraseHeight) {
-    ctx.rect(canvasCenter[0] - eraseWidth, canvasCenter[1] - eraseHeight,  eraseWidth*2 , eraseHeight*2);
-    ctx.fillStyle = 'white';
-    ctx.fill();
+let eraseObjects = function() {
+    ctx.clearRect(0,0, canvas.width, canvas.height);
+    ctx.beginPath();
 }
 
 let calculateAngle = function() {
@@ -147,8 +164,8 @@ let calculateWavyOffset = function(q) {
     let centerMatrix = [];
     if (matrixSize[0] )
     centerMatrix[0] = [Math.floor(matrixSize[0]/2) + 1,Math.floor(matrixSize[1]/2) + 1];
-    offsetX = Math.sin( (matrixSize[0] - Math.abs(shapes[q].matrixPos[0] - centerMatrix[0][0]) )/matrixSize[0]);
-    offsetY = Math.sin( (matrixSize[1] - Math.abs(shapes[q].matrixPos[1] - centerMatrix[0][1]) )/matrixSize[1]);
+    offsetX = Math.sin( (matrixSize[0] - Math.abs(shapes[q].matrixPos[0] - centerMatrix[0][0])) / matrixSize[0]);
+    offsetY = Math.sin( (matrixSize[1] - Math.abs(shapes[q].matrixPos[1] - centerMatrix[0][1])) / matrixSize[1]);
     offset = offsetX + offsetY;
     return offset*80;
 }
@@ -156,9 +173,9 @@ let calculateWavyOffset = function(q) {
 let drawObjects = function(edgeSin, edgeCos){
     for (let q = 0; q < shapes.length; q++) {
         let Wavy = Math.sin( (frameCounter + calculateWavyOffset(q)) / 20);
-        for (let e = 0; e < shapes[q].edges.length; e++) { // draws cuboid
+        for (let e = 0; e < shapes[q].edges.length; e++) {
             ctx.save(); // saves the ctx's initial position
-            ctx.translate(c.width / 2, c.height / 2); // moves ctx to the middle of canvas
+            ctx.translate(canvas.width / 2, canvas.height / 2); // moves ctx to the middle of canvas
             let n0 = shapes[q].edges[e][0]; // the array position of one of the edge's node
             let n1 = shapes[q].edges[e][1]; // the array position of the edge's other node
             let node0 = shapes[q].nodes[n0]; // one of node's coordinate(x,y,z)
@@ -180,10 +197,15 @@ let drawObjects = function(edgeSin, edgeCos){
     }
 };
 
-
 setInterval(function () {
     objAngle = calculateAngle();
-    eraseObjects(200,200);
+    if (!firstMouseDrag) {
+        rotateY3D(0.1);
+    }
+    eraseObjects();
     drawObjects(objAngle[0], objAngle[1]);
     frameCounter++;
 }, 16.7);
+rotateX3D(-60);
+rotateZ3D(65);
+
